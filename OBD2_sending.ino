@@ -14,8 +14,7 @@
 COBDI2C obd;
 bool hasMEMS;
 
-void testOut()
-{
+void testOut() {
   static const char cmds[][6] = {"ATZ\r", "ATH0\r", "ATRV\r", "0100\r", "010C\r", "0902\r"};
   char buf[128];
 
@@ -44,8 +43,7 @@ void testOut()
   Serial.println();
 }
 
-void readMEMS()
-{
+void readMEMS() {
   int acc[3];
   int gyro[3];
   int temp;
@@ -69,14 +67,14 @@ void readMEMS()
   Serial.print(gyro[1]);
   Serial.print('/');
   Serial.print(gyro[2]);
+  boolMotion(acc[2]);
 
   Serial.print(" TEMP:");
   Serial.print((float)temp / 10, 1);
   Serial.println("C");
 }
 
-void readPIDs()
-{
+void readPIDs() {
   static const byte pidlist[] = {PID_ENGINE_LOAD, PID_COOLANT_TEMP, PID_RPM, PID_SPEED, PID_TIMING_ADVANCE, PID_INTAKE_TEMP, PID_THROTTLE, PID_FUEL_LEVEL};
   Serial.print('[');
   Serial.print(millis());
@@ -90,6 +88,7 @@ void readPIDs()
       int value;
       if (obd.readPID(pid, value)) {
         Serial.print(value);
+        boolRPM(pid, value);
       }
     }
     Serial.print(' ');
@@ -97,8 +96,7 @@ void readPIDs()
   Serial.println();
 }
 
-void readBatteryVoltage()
-{
+void readBatteryVoltage() {
   Serial.print('[');
   Serial.print(millis());
   Serial.print(']');
@@ -107,11 +105,44 @@ void readBatteryVoltage()
   Serial.println('V');
 }
 
+bool boolMotion(int gyro) {
+  if (gyro < 15000, 20000 < gyro) {
+    digitalWrite(8, HIGH);
+    return true;
+  } else {
+    digitalWrite(8, LOW);
+    return false;
+  }
+}
+
+bool boolRPM(byte pid, int rpm) {
+  if(pid == PID_RPM)
+  if (rpm > 2000) {
+    digitalWrite(13, HIGH);
+    return true;
+  } else {
+    digitalWrite(13, LOW);
+    return false;
+  }
+}
+
+bool boolObd2init() {
+  return false;
+  if(obd.init()){
+    Serial.println("obd Init process stopped");
+    return false;
+  }else{
+    return true;
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   delay(500);
   obd.begin();
   pinMode(13, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(9, OUTPUT);
   hasMEMS = obd.memsInit();
   Serial.print("MEMS:");
   Serial.println(hasMEMS ? "Yes" : "No");
@@ -123,8 +154,7 @@ void setup() {
   do {
     digitalWrite(13, HIGH);
     Serial.println("Init...");
-  } while (!obd.init());
-  
+  } while (false);
   digitalWrite(13, LOW);
   char buf[64];
   if (obd.getVIN(buf, sizeof(buf))) {
@@ -145,7 +175,6 @@ void setup() {
     }
     Serial.println();
   }
-  delay(3000);
 }
 
 void loop() {
