@@ -126,16 +126,6 @@ bool boolRPM(byte pid, int rpm) {
   }
 }
 
-bool boolObd2init() {
-  return false;
-  if(obd.init()){
-    Serial.println("obd Init process stopped");
-    return false;
-  }else{
-    return true;
-  }
-}
-
 void setup() {
   Serial.begin(115200);
   delay(500);
@@ -154,7 +144,11 @@ void setup() {
   do {
     digitalWrite(13, HIGH);
     Serial.println("Init...");
-  } while (false);
+  } while (!obd.init(PROTO_ISO_9141_2));
+  
+  // send some commands for testing and show response for debugging purpose
+  testOut();
+  
   digitalWrite(13, LOW);
   char buf[64];
   if (obd.getVIN(buf, sizeof(buf))) {
