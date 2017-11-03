@@ -1,20 +1,19 @@
 /*************************************************************************
-* Sample sketch based on OBD-II library for Arduino
-* Distributed under GPL v2.0
-* Visit http://freematics.com for more information
-* (C)2012-2014 Stanley Huang <stanleyhuangyc@gmail.com>
+  Testing sketch for Freematics OBD-II I2C Adapter
+  Reads and prints several OBD-II PIDs value and MEMS sensor data
+  Distributed under GPL v2.0
+  Visit http://freematics.com for more information
+  Written by Stanley Huang <support@freematics.com.au>
 *************************************************************************/
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <SPI.h>
 #include <OBD.h>
 
 COBDI2C obd;
+bool hasMEMS;
 
-<<<<<<< HEAD
-void setup()
-{
-=======
 void testOut() {
   static const char cmds[][6] = {"ATZ\r", "ATH0\r", "ATRV\r", "0100\r", "010C\r", "0902\r"};
   char buf[128];
@@ -128,17 +127,9 @@ bool boolRPM(byte pid, int rpm) {
 }
 
 void setup() {
->>>>>>> 74d2c8a1577ef3107cbab6801d25907ed8e7b4fb
   Serial.begin(115200);
-  // we'll use the debug LED as output
-  pinMode(13, OUTPUT);  
-  // start communication with OBD-II UART adapter
+  delay(500);
   obd.begin();
-<<<<<<< HEAD
-  // initiate OBD-II connection until success
-  while (!obd.init()){
-    Serial.println("obd initilizing...");
-=======
   pinMode(13, OUTPUT);
   pinMode(8, OUTPUT);
   pinMode(9, OUTPUT);
@@ -177,18 +168,14 @@ void setup() {
       Serial.print(codes[n], HEX);
     }
     Serial.println();
->>>>>>> 74d2c8a1577ef3107cbab6801d25907ed8e7b4fb
   }
-  Serial.println("function setup is end.");
 }
 
-void loop()
-{
-  int value;
-  if (obd.readPID(PID_RPM, value)) {
-    // RPM is successfully read and its value stored in variable 'value'
-    // light on LED when RPM exceeds 3000
-    Serial.println("rpm: " + value);
-    digitalWrite(13, value > 2000 ? HIGH : LOW);
+void loop() {
+  readPIDs();
+  readBatteryVoltage();
+  if (hasMEMS) {
+    readMEMS();
   }
 }
+
